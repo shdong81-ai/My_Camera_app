@@ -15,6 +15,9 @@ android.api = 33
 android.ndk = 25b
 android.private_storage = True
 android.accept_sdk_license = True
+android.gradle_version = 8.0
+android.android_build_tools_version = 8.1.0
+android.java_version = 17
 
 [buildozer]
 log_level = 2
