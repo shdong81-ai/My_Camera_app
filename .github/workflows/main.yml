@@ -43,6 +43,7 @@ jobs:
         # Buildozer가 자체 다운로드를 건너뛰고 시스템 SDK를 바라보게 환경변수 주입
         export ANDROID_SDK_ROOT=$ANDROID_HOME
         export ANDROID_NDK_ROOT=$ANDROID_HOME/ndk/25.2.9519653
+    
         
         # 빌드 시작
         yes | buildozer -v android debug
@@ -53,3 +54,5 @@ jobs:
       with:
         name: Android-APK
         path: bin/*.apk
+# 기존 명령어 뒤에 -f (force) 또는 캐시 클린 옵션을 붙여 찌꺼기를 날려줍니다.
+run: buildozer android clean && buildozer -v android debug
