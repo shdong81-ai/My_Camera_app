@@ -11,7 +11,7 @@ orientation = portrait
 fullscreen = 1
 
 # Android 패키징 상세 가이드 버전 지정
-android.api = 34
+android.api = 33
 android.ndk = 25b
 android.private_storage = True
 android.accept_sdk_license = True
