@@ -13,12 +13,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    # 1. 필수 컴파일 도구 설치
+    # 1. 필수 컴파일 도구 및 깃허브에 내장된 Java 17 그대로 활용
     - name: Install dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y build-essential libtool automake autoconf autotools-dev pkg-config libffi-dev ccache git python3-dev
-        sudo apt-get install -y libssl-dev openjdk-17-jdk zip unzip
+        sudo apt-get install -y libssl-dev zip unzip
 
     # 2. 파이썬 환경 세팅
     - name: Set up Python
@@ -32,30 +32,22 @@ jobs:
         python -m pip install --upgrade pip
         pip install buildozer cython==0.29.36 sh
 
-    # 4. Buildozer가 내부 안드로이드 SDK 구조를 스스로 만들도록 최초 1회 가볍게 실행 유도
-    - name: Pre-build to initialize SDK
+    # 4. 🔥 [핵심] 깃허브가 이미 가지고 있는 안드로이드 SDK 라이선스에 미리 도장 찍기
+    - name: Accept Pre-installed Android SDK Licenses
       run: |
-        # SDK 뼈대만 만들고 라이선스 단계 전에 의도적으로 빠져나오기 위해 설정 시도
-        buildozer android list || true
-
-    # 5. 🔥 [핵심 핵심 수정] 깃허브 환경에 존재하는 모든 안드로이드 SDK 라이선스에 강제 자동 동의
-    - name: Accept Android SDK Licenses Manually
-      run: |
-        mkdir -p $HOME/.android
-        touch $HOME/.android/repositories.cfg
-        # 가상환경 내의 sdkmanager를 직접 호출하거나 Buildozer 폴더에 동의 파일 강제 주입
-        if [ -d "$HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin" ]; then
-          yes | $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses || true
-        fi
-        # 추가로 깃허브가 자체 보유한 기본 Android SDK 라이선스도 동의 처리
         yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
-    # 6. 빌드 수행 (SDK 33 missing 에러 완벽 차단)
-    - name: Build with Buildozer
+    # 5. 🔥 [핵심] Buildozer에게 새로 다운받지 말고 이미 깔려있는 시스템 SDK 경로를 쓰라고 강제 지시
+    - name: Build with Buildozer using System SDK
       run: |
+        # Buildozer가 자체 다운로드를 건너뛰고 시스템 SDK를 바라보게 환경변수 주입
+        export ANDROID_SDK_ROOT=$ANDROID_HOME
+        export ANDROID_NDK_ROOT=$ANDROID_HOME/ndk/25.2.9519653
+        
+        # 빌드 시작
         yes | buildozer -v android debug
 
-    # 7. 완성된 APK 파일 업로드
+    # 6. 완성된 APK 파일 업로드
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
